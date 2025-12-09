@@ -1,0 +1,136 @@
+// Flux - Prisma Schema
+// Base de datos para comunidad de bienestar en Andorra
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// MODELOS MVP
+// ============================================
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String   // running, yoga, padel, mindfulness, social, nature, workout
+  date        DateTime
+  time        String   // "18:00"
+  duration    Int?     // minutos
+  location    String   // Andorra la Vella, La Massana, Ordino, etc.
+  address     String?  // Dirección específica
+  level       String?  // principiante, intermedio, avanzado, todos
+  capacity    Int?     // Plazas disponibles (null = sin límite)
+  imageUrl    String?  // URL de imagen del evento
+  status      String   @default("active") // active, archived, cancelled
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  registrations Registration[]
+
+  // Futuro: organizerId, price, recurring, etc.
+
+  @@index([date])
+  @@index([category])
+  @@index([status])
+}
+
+model Registration {
+  id        String   @id @default(cuid())
+  eventId   String
+  name      String
+  email     String
+  phone     String?
+  notes     String?  // Notas adicionales del participante
+  status    String   @default("confirmed") // confirmed, cancelled, waitlist
+
+  createdAt DateTime @default(now())
+
+  // Relaciones
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  // Evitar duplicados: mismo email en mismo evento
+  @@unique([eventId, email])
+  @@index([eventId])
+  @@index([email])
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // bcrypt hash
+  name      String
+  role      String   @default("admin") // admin, superadmin
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// MODELOS FUTUROS (preparados pero no activos)
+// ============================================
+
+// Para cuando se implemente sistema de usuarios
+// model User {
+//   id          String   @id @default(cuid())
+//   email       String   @unique
+//   password    String?
+//   name        String
+//   phone       String?
+//   avatar      String?
+//   bio         String?
+//   interests   String[] // categorías de interés
+//   memberSince DateTime @default(now())
+//
+//   // Membresía
+//   membershipType   String?   // free, basic, premium
+//   membershipExpiry DateTime?
+//
+//   // Social
+//   instagramHandle String?
+//
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// Para organizadores externos
+// model Organizer {
+//   id          String  @id @default(cuid())
+//   name        String
+//   email       String  @unique
+//   description String?
+//   logo        String?
+//   verified    Boolean @default(false)
+//
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// Para pagos y transacciones
+// model Payment {
+//   id            String   @id @default(cuid())
+//   userId        String
+//   eventId       String?
+//   amount        Int      // centimos
+//   currency      String   @default("EUR")
+//   status        String   // pending, completed, failed, refunded
+//   stripeId      String?
+//
+//   createdAt DateTime @default(now())
+// }
+
+// Para eventos recurrentes
+// model RecurringPattern {
+//   id        String @id @default(cuid())
+//   eventId   String
+//   frequency String // daily, weekly, biweekly, monthly
+//   dayOfWeek Int?   // 0-6 para weekly
+//   endDate   DateTime?
+// }
