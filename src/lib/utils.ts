@@ -1,13 +1,12 @@
-import { type ClassValue, clsx } from 'clsx'
+// Tipo para valores de clase CSS
+type ClassValue = string | number | boolean | undefined | null | ClassValue[]
 
-// Combinar clases CSS
-export function cn(...inputs: ClassValue[]) {
-  return clsx(inputs)
-}
-
-// Función auxiliar simple (sin twMerge para evitar dependencia extra)
-export function clsx(...classes: ClassValue[]): string {
-  return classes.filter(Boolean).join(' ')
+// Combinar clases CSS (implementación simple sin dependencias)
+export function cn(...inputs: ClassValue[]): string {
+  return inputs
+    .flat()
+    .filter((x) => typeof x === 'string' && x.length > 0)
+    .join(' ')
 }
 
 // Formatear fecha en español
